@@ -55,8 +55,11 @@
   @media (max-width: 560px) { .tiles { grid-template-columns: 1fr; } .tile { min-height: 0; } }
 
   footer { color: var(--muted); font-size: 13px; line-height: 1.7; text-align: center; padding: 34px 16px 32px; }
-  footer .fl { height: 30px; opacity: .85; display: block; margin: 0 auto 8px; }
-  footer span { display: block; max-width: 860px; margin: 0 auto; }
+  footer .fb { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 auto 8px; }
+  footer .fl { height: 30px; opacity: .85; display: block; }
+  footer .fd { border-left: 1px solid var(--gold); padding-left: 10px; font-size: 14px; font-weight: 700; color: var(--red-d); letter-spacing: .04em; line-height: 1.2; text-align: left; }
+  @media (max-width: 600px) { footer .fd { font-size: 13px; max-width: 120px; } }
+  footer > span { display: block; max-width: 860px; margin: 0 auto; }
 
   /* ---------------- prediction page ---------------- */
   .ptitle { padding-top: 22px; }
@@ -179,7 +182,7 @@
   </main>
 </div>
 
-<footer><img class="fl" src="logo.png" alt=""><span data-t="footer"></span></footer>
+<footer><div class="fb"><img class="fl" src="logo.png" alt=""><span class="fd" data-t="dept"></span></div><span data-t="footer"></span></footer>
 
 <script src="model.js"></script>
 <script>
@@ -197,9 +200,9 @@ const T = {
     t3h: "How it was built", t3p: "CoxBoost-FG competing-risk model, with other-cause death as a competing event, developed in SEER 17 registries (diagnoses 2010–2023); 5-year C-index 0.772 in cross-validation.",
     t4h: "Your privacy", t4p: "All calculations run in your browser. Nothing you enter is sent, saved or shared.",
     ptitle: "Risk prediction", psub: "Complete every field, then click Calculate.",
-    inputs: "Patient and tumour characteristics", g_patient: "Patient", g_tumour: "Tumour", g_treat: "Treatment",
+    inputs: "Patient and tumor characteristics", g_patient: "Patient", g_tumour: "Tumor", g_treat: "Treatment",
     calc: "Calculate", reset: "Reset", select: "— Select —", missing: "Please complete the {n} highlighted field(s).", fix: "Please correct the highlighted field(s).",
-    result: "Predicted risk of breast-cancer death", placeholder: "Complete all fields on the left and click Calculate to see the prediction.",
+    result: "Predicted risk of breast-cancer death", placeholder: "Complete all fields and click Calculate to see the prediction.",
     stale: "The inputs have changed. Click Calculate to update the results.",
     horizon: "Time since diagnosis", cif: "Cumulative incidence", y3: "3 years", y5: "5 years", y10: "10 years",
     r5lab: "Predicted 5-year cumulative incidence of breast-cancer death", low: "Low risk", high: "High risk",
@@ -209,9 +212,9 @@ const T = {
     adv_lo_b: "In the development study, the difference in the low-risk group was about 0.5 percentage points and was not statistically significant. Whether to omit radiotherapy also depends on the risk of local recurrence, hormone-receptor status and endocrine therapy, general health and personal preference.",
     adv_note: "This suggestion is for reference only; treatment decisions should be made together with your doctor.",
     xlab: "Months since diagnosis", ylab: "Cumulative incidence of breast-cancer death",
-    tauto: "Set from tumour size (T1 ≤20 mm, T2 21–50 mm)", nxnote: "Nx: no lymph nodes examined (set to 0)",
+    tauto: "Set from tumor size (T1 ≤20 mm, T2 21–50 mm)", nxnote: "Nx: no lymph nodes examined (set to 0)",
     nodes0: "N0/N1 requires at least 1 node examined", warn: "Above the 99th percentile of the development cohort ({v}); prediction less reliable", range: "Allowed range {a}–{b}",
-    footer: "Xiangya Hospital of Central South University · This calculator is intended for research and education. It does not replace clinical judgement and should not be used on its own to guide treatment decisions for individual patients. The model has been validated internally only.",
+    footer: "Xiangya Hospital of Central South University · This calculator is intended for research and education. It does not replace clinical judgment and should not be used on its own to guide treatment decisions for individual patients. The model has been validated internally only.",
     notes: `<h3>Intended use and limitations</h3><ul>
       <li>For research and education only; not intended to guide treatment decisions for individual patients.</li>
       <li>Developed in women aged ≥70 years with T1–T2, N0–N1 or Nx invasive ductal carcinoma treated with breast-conserving surgery, diagnosed in 2010–2023, who received radiotherapy or documented refusal of it and survived at least 6 months. Do not use outside this population.</li>
@@ -233,7 +236,7 @@ const T = {
     ptitle: "风险预测", psub: "请填写全部项目，然后点击“计算”。",
     inputs: "患者与肿瘤特征", g_patient: "患者", g_tumour: "肿瘤", g_treat: "治疗",
     calc: "计算", reset: "重置", select: "— 请选择 —", missing: "请填写标红的 {n} 个项目。", fix: "请修正标红的项目。",
-    result: "预测的乳腺癌死亡风险", placeholder: "请在左侧填写全部项目并点击“计算”，此处将显示预测结果。",
+    result: "预测的乳腺癌死亡风险", placeholder: "请填写全部项目并点击“计算”，此处将显示预测结果。",
     stale: "输入已更改，请点击“计算”更新结果。",
     horizon: "诊断后时间", cif: "累积发生率", y3: "3年", y5: "5年", y10: "10年",
     r5lab: "预测的5年乳腺癌死亡累积发生率", low: "低风险", high: "高风险",
