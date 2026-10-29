@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Breast-Cancer Death Risk Calculator</title>
-<meta name="description" content="Predicted cumulative incidence of breast-cancer death for women aged 70 years or older after breast-conserving surgery (CoxBoost-FG competing-risk model, SEER).">
+<title>Radiotherapy Decision Support</title>
+<meta name="description" content="Radiotherapy decision support for women aged 70 years or older after breast-conserving surgery: predicted risk of breast-cancer death from a competing-risk model developed in SEER (CoxBoost-FG).">
 <style>
   /* palette after the Xiangya Hospital website: red, gold, dark gold */
   :root { --red: #ee1c25; --red-d: #b5121a; --gold: #c6a268; --gold-d: #a3723c; --ink: #2b2b2b; --muted: #666; --line: #e3e0da;
@@ -192,11 +192,11 @@ const SEER_DB = "Incidence – SEER Research Data, 17 Registries, Nov 2025 Sub (
 const T = {
   en: {
     kicker: "Clinical research tool", home: "← Home",
-    title: "Breast-cancer death risk after breast-conserving surgery in women aged ≥70 years",
-    lead: "Estimate the cumulative incidence of breast-cancer death at 3, 5 and 10 years from routine clinical and pathological characteristics, using a competing-risk machine-learning model developed in the SEER database.",
+    title: "Radiotherapy Decision Support after Breast-Conserving Surgery in Women Aged ≥70 Years",
+    lead: "A competing-risk machine-learning model developed in the SEER database that predicts the risk of breast-cancer death to inform whether patients should receive radiotherapy after breast-conserving surgery.",
     dept: "Department of Breast Surgery", start: "Start prediction",
     t1h: "Who it is for", t1p: "Women aged ≥70 years with T1–T2, N0–N1 or Nx invasive ductal carcinoma treated with breast-conserving surgery.",
-    t2h: "What you get", t2p: "The predicted cumulative incidence of breast-cancer death at 3, 5 and 10 years, a 10-year incidence curve and the model-based risk group (low or high).",
+    t2h: "What you get", t2p: "The predicted cumulative incidence of breast-cancer death at 3, 5 and 10 years, a 10-year incidence curve, the model-based risk group (low or high) and a suggestion on radiotherapy.",
     t3h: "How it was built", t3p: "CoxBoost-FG competing-risk model, with other-cause death as a competing event, developed in SEER 17 registries (diagnoses 2010–2023); 5-year C-index 0.772 in cross-validation.",
     t4h: "Your privacy", t4p: "All calculations run in your browser. Nothing you enter is sent, saved or shared.",
     ptitle: "Risk prediction", psub: "Complete every field, then click Calculate.",
@@ -216,7 +216,7 @@ const T = {
     nodes0: "N0/N1 requires at least 1 node examined", warn: "Above the 99th percentile of the development cohort ({v}); prediction less reliable", range: "Allowed range {a}–{b}",
     footer: "Xiangya Hospital of Central South University · This calculator is intended for research and education. It does not replace clinical judgment and should not be used on its own to guide treatment decisions for individual patients. The model has been validated internally only.",
     notes: `<h3>Intended use and limitations</h3><ul>
-      <li>For research and education only; not intended to guide treatment decisions for individual patients.</li>
+      <li>For research and education only; intended to support discussion between doctors and patients about whether to receive radiotherapy, not to replace clinical judgment.</li>
       <li>Developed in women aged ≥70 years with T1–T2, N0–N1 or Nx invasive ductal carcinoma treated with breast-conserving surgery, diagnosed in 2010–2023, who received radiotherapy or documented refusal of it and survived at least 6 months. Do not use outside this population.</li>
       <li>The model includes year of diagnosis; predictions are calculated for diagnosis in ${YEAR_FIXED}, the most recent year of the development data.</li>
       <li>Internal validation only (5-fold cross-validation; 5-year competing-risk C-index 0.772); no external validation.</li>
@@ -226,11 +226,11 @@ const T = {
   },
   zh: {
     kicker: "临床科研工具", home: "← 首页",
-    title: "70岁及以上保乳术后乳腺癌患者乳腺癌死亡风险计算器",
-    lead: "基于SEER数据库构建的竞争风险机器学习模型，根据常规临床病理特征估计患者3年、5年与10年的乳腺癌死亡累积发生率。",
+    title: "70岁及以上女性保乳术后放疗决策辅助工具",
+    lead: "基于SEER数据库构建的竞争风险机器学习模型，预测乳腺癌死亡风险并为保乳术后患者是否接受放疗提供参考。",
     dept: "乳腺外科", start: "开始预测",
     t1h: "适用人群", t1p: "年龄≥70岁、接受保乳手术的T1–T2期、N0–N1或Nx浸润性导管癌女性。",
-    t2h: "预测结果", t2p: "3年、5年与10年乳腺癌死亡累积发生率，10年累积发生率曲线，以及模型判定的风险分组（低风险或高风险）。",
+    t2h: "预测结果", t2p: "3年、5年与10年乳腺癌死亡累积发生率，10年累积发生率曲线，模型判定的风险分组（低风险或高风险），以及放疗参考建议。",
     t3h: "模型构建", t3p: "CoxBoost-FG竞争风险模型（他因死亡为竞争事件），基于SEER 17个登记处数据（2010–2023年诊断）构建；交叉验证5年C指数0.772。",
     t4h: "隐私保护", t4p: "全部计算在您的浏览器中完成，输入的信息不会被上传、保存或共享。",
     ptitle: "风险预测", psub: "请填写全部项目，然后点击“计算”。",
@@ -250,7 +250,7 @@ const T = {
     nodes0: "N0/N1 需至少检出1枚淋巴结", warn: "超过建模队列的第99百分位数（{v}），预测可靠性较低", range: "允许范围 {a}–{b}",
     footer: "中南大学湘雅医院 · 本计算器仅供科研与教学使用，不能替代临床判断，也不应单独用于指导个体患者的治疗决策。模型目前仅经过内部验证。",
     notes: `<h3>用途与局限</h3><ul>
-      <li>仅供科研与教学使用，不用于指导个体患者的治疗决策。</li>
+      <li>仅供科研与教学使用；用于辅助医生与患者讨论是否接受放疗，不能替代临床判断。</li>
       <li>建模人群为2010—2023年诊断、年龄≥70岁、接受保乳手术的T1–T2期、N0–N1或Nx浸润性导管癌女性，接受放疗或经记录拒绝放疗，且生存至少6个月。不适用于该人群以外的患者。</li>
       <li>模型包含诊断年份变量；网页统一按建模数据中最近的年份（${YEAR_FIXED}年）计算。</li>
       <li>模型仅经过内部验证（5折交叉验证；5年竞争风险C指数0.772），尚无外部验证。</li>
@@ -313,7 +313,7 @@ const el = n => document.getElementById("i_" + n);
 const fmt = p => (100 * p).toFixed(2) + "%";
 function applyText() {
   document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
-  document.title = lang === "zh" ? "乳腺癌死亡风险计算器" : "Breast-Cancer Death Risk Calculator";
+  document.title = lang === "zh" ? "保乳术后放疗决策辅助" : "Radiotherapy Decision Support";
   document.querySelectorAll("[data-t]").forEach(e => e.textContent = tr(e.dataset.t));
   document.querySelectorAll("[data-th]").forEach(e => e.innerHTML = tr(e.dataset.th));
   document.getElementById("b-en").classList.toggle("on", lang === "en"); document.getElementById("b-zh").classList.toggle("on", lang === "zh");
