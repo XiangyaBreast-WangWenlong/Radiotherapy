@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Breast-Cancer Death Risk Calculator</title>
+<meta name="description" content="Predicted cumulative incidence of breast-cancer death for women aged 70 years or older after breast-conserving surgery (CoxBoost-FG competing-risk model, SEER).">
+<style>
+  /* palette after the Xiangya Hospital website: red, gold, dark gold */
+  :root { --red: #ee1c25; --red-d: #b5121a; --gold: #c6a268; --gold-d: #a3723c; --ink: #2b2b2b; --muted: #666; --line: #e3e0da;
+          --bg: #f7f5f1; --card: #fff; --low: #34548a; --high: #c0392b; --curve: #bc3c29; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 Arial, "Microsoft YaHei", "PingFang SC", sans-serif; }
+  a { color: inherit; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+
+  /* top bar */
+  .top { background: #fff; border-bottom: 3px solid var(--red); position: sticky; top: 0; z-index: 10; }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 76px; }
+  .logo { height: 52px; width: auto; display: block; }
+  .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .dept { border-left: 1px solid var(--gold); padding-left: 14px; font-size: 20px; font-weight: 700; color: var(--red-d); letter-spacing: .06em; white-space: nowrap; }
+  @media (max-width: 600px) { .brand { gap: 10px; } .dept { font-size: 14px; line-height: 1.25; padding-left: 10px; white-space: normal; max-width: 150px; } }
+  .right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .homelink { font-size: 14px; color: var(--gold-d); text-decoration: none; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .homelink:hover { color: var(--red); }
+  .lang { display: flex; }
+  .lang button { border: 1px solid var(--gold); background: #fff; color: var(--gold-d); padding: 5px 12px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+  .lang button:first-child { border-radius: 4px 0 0 4px; } .lang button:last-child { border-radius: 0 4px 4px 0; border-left: 0; }
+  .lang button.on { background: var(--gold); color: #fff; }
+  @media (max-width: 600px) { .top .wrap { height: auto; padding-top: 8px; padding-bottom: 8px; flex-wrap: wrap; } .logo { height: 34px; } }
+
+  /* ---------------- welcome page ---------------- */
+  .hero { background: linear-gradient(135deg, var(--red-d) 0%, var(--red) 55%, #f04a43 100%); color: #fff; position: relative; overflow: hidden; }
+  .hero::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, rgba(255,255,255,.04) 0 14px, transparent 14px 28px); pointer-events: none; }
+  .hero .wrap { position: relative; z-index: 1; padding-top: 64px; padding-bottom: 72px; }
+  .kicker { display: inline-block; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); padding: 3px 12px; border-radius: 999px; font-size: 13px; letter-spacing: .04em; }
+  .hero h1 { font-size: 38px; line-height: 1.25; margin: 18px 0 10px; max-width: 860px; }
+  .hero p.lead { font-size: 18px; max-width: 760px; margin: 0 0 30px; opacity: .95; }
+  .start { display: inline-flex; align-items: center; gap: 12px; background: var(--gold); color: #fff; border: 0; border-radius: 6px; padding: 16px 38px;
+           font-size: 21px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.22); transition: transform .12s, background .12s; }
+  .start:hover { background: var(--gold-d); transform: translateY(-2px); }
+  .start svg { width: 22px; height: 22px; }
+  @media (max-width: 600px) { .hero .wrap { padding-top: 40px; padding-bottom: 48px; } .hero h1 { font-size: 27px; } .hero p.lead { font-size: 16px; } .start { font-size: 18px; padding: 14px 28px; } }
+
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: -34px; position: relative; z-index: 2; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+  .tile { color: #fff; padding: 24px 22px 26px; min-height: 230px; }
+  .tile:nth-child(1) { background: var(--gold); } .tile:nth-child(2) { background: var(--red); }
+  .tile:nth-child(3) { background: var(--gold-d); } .tile:nth-child(4) { background: var(--red-d); }
+  .tile svg { width: 34px; height: 34px; stroke: #fff; fill: none; stroke-width: 1.8; margin-bottom: 8px; }
+  .tile h3 { margin: 0 0 8px; font-size: 18px; }
+  .tile p { margin: 0; font-size: 14px; opacity: .96; }
+  @media (max-width: 960px) { .tiles { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .tiles { grid-template-columns: 1fr; } .tile { min-height: 0; } }
+
+  footer { color: var(--muted); font-size: 13px; line-height: 1.7; text-align: center; padding: 34px 16px 32px; }
+  footer .fl { height: 30px; opacity: .85; display: block; margin: 0 auto 8px; }
+  footer span { display: block; max-width: 860px; margin: 0 auto; }
+
+  /* ---------------- prediction page ---------------- */
+  .ptitle { padding-top: 22px; }
+  .ptitle h2 { margin: 0; font-size: 22px; color: var(--red-d); }
+  .ptitle p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 18px; padding-top: 16px; padding-bottom: 8px; }
+  @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--gold); border-radius: 6px; padding: 16px 18px; }
+  .card h2 { font-size: 17px; margin: 0 0 10px; }
+  fieldset { border: 0; padding: 0; margin: 0 0 8px; }
+  legend { font-weight: 700; color: var(--gold-d); font-size: 13px; letter-spacing: .03em; margin-bottom: 6px; text-transform: uppercase; }
+  .fg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+  @media (max-width: 520px) { .fg { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 3px; }
+  select, input[type=number] { width: 100%; padding: 7px 8px; border: 1px solid #cfcac2; border-radius: 4px; background: #fff; color: var(--ink); font-size: 14px; }
+  select:focus, input:focus { outline: 2px solid rgba(198,162,104,.6); border-color: var(--gold); }
+  select.empty { color: #999; }
+  .bad { border-color: var(--high) !important; background: #fff6f5 !important; }
+  input:disabled, select:disabled { background: #f2f0ec; color: #777; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 2px; min-height: 16px; }
+  .hint.warn { color: var(--high); }
+  .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .btn { border: 0; border-radius: 5px; padding: 11px 26px; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .btn.primary { background: var(--red); color: #fff; } .btn.primary:hover { background: var(--red-d); }
+  .btn.ghost { background: #fff; color: var(--gold-d); border: 1px solid var(--gold); font-weight: 600; } .btn.ghost:hover { background: #faf6ef; }
+  .msg { font-size: 13px; color: var(--high); }
+
+  .placeholder { color: var(--muted); text-align: center; padding: 64px 12px; border: 2px dashed var(--line); border-radius: 6px; }
+  .placeholder svg { width: 46px; height: 46px; stroke: var(--gold); fill: none; stroke-width: 1.6; display: block; margin: 0 auto 10px; }
+  #res.stale .resbody { opacity: .35; }
+  .stalebar { display: none; background: #fff8e8; border: 1px solid var(--gold); color: var(--gold-d); font-size: 13px; padding: 6px 10px; border-radius: 4px; margin-bottom: 10px; }
+  #res.stale .stalebar { display: block; }
+  .big { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .big .num { font-size: 42px; font-weight: 700; line-height: 1; color: var(--ink); }
+  .badge { display: inline-block; padding: 4px 13px; border-radius: 999px; font-weight: 700; font-size: 14px; color: #fff; }
+  .badge.low { background: var(--low); } .badge.high { background: var(--high); }
+  .sub5 { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  /* suggestion box after the prediction: red for high risk, blue for low risk */
+  .advice { margin-top: 14px; border-radius: 6px; padding: 12px 14px 12px 14px; border: 1px solid; border-left-width: 6px; display: grid; grid-template-columns: 30px 1fr; gap: 0 10px; }
+  .advice.high { background: #fdeeec; border-color: #f2b8b1; border-left-color: var(--high); }
+  .advice.low { background: #edf2f9; border-color: #bcd0ea; border-left-color: var(--low); }
+  .advice svg { width: 28px; height: 28px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; margin-top: 1px; }
+  .advice.high svg { stroke: var(--high); } .advice.low svg { stroke: var(--low); }
+  .advice .at { font-size: 17px; font-weight: 700; line-height: 1.4; }
+  .advice.high .at { color: var(--high); } .advice.low .at { color: var(--low); }
+  .advice .ab { font-size: 14px; color: var(--ink); margin-top: 4px; }
+  .advice .an { grid-column: 1 / -1; font-size: 13px; font-weight: 700; color: var(--ink); margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,.18); }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  td.r, th.r { text-align: right; }
+  svg.plot { width: 100%; height: auto; display: block; margin-top: 10px; }
+  .axis text { fill: var(--muted); font-size: 11px; } .axis line, .axis path { stroke: #d8d4cc; }
+  .notes { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .notes h3 { font-size: 14px; color: var(--ink); margin: 14px 0 6px; }
+  .notes ul { margin: 0; padding-left: 18px; } .notes li { margin: 3px 0; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><img class="logo" src="logo.png" alt="Xiangya Hospital of Central South University"><span class="dept" data-t="dept"></span></div>
+  <div class="right">
+    <a class="homelink" id="homelink" data-t="home" hidden></a>
+    <div class="lang"><button id="b-en" type="button">English</button><button id="b-zh" type="button">简体中文</button></div>
+  </div>
+</div></header>
+
+<!-- ================= welcome page ================= -->
+<div id="view-home">
+  <section class="hero"><div class="wrap">
+    <span class="kicker" data-t="kicker"></span>
+    <h1 data-t="title"></h1>
+    <p class="lead" data-t="lead"></p>
+    <button class="start" id="start" type="button"><span data-t="start"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </div></section>
+  <div class="wrap">
+    <div class="tiles">
+      <div class="tile"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><h3 data-t="t1h"></h3><p data-t="t1p"></p></div>
+      <div class="tile"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 16l4-5 4 3 6-8"/></svg><h3 data-t="t2h"></h3><p data-t="t2p"></p></div>
+      <div class="tile"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 15v-3M12 15V9M16 15v-5"/></svg><h3 data-t="t3h"></h3><p data-t="t3p"></p></div>
+      <div class="tile"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><h3 data-t="t4h"></h3><p data-t="t4p"></p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= prediction page ================= -->
+<div id="view-predict" hidden>
+  <div class="wrap ptitle"><h2 data-t="ptitle"></h2><p data-t="psub"></p></div>
+  <main class="wrap grid2">
+    <section class="card">
+      <h2 data-t="inputs"></h2>
+      <form id="f" autocomplete="off" onsubmit="return false">
+        <fieldset><legend data-t="g_patient"></legend><div class="fg" id="g1"></div></fieldset>
+        <fieldset><legend data-t="g_tumour"></legend><div class="fg" id="g2"></div></fieldset>
+        <fieldset><legend data-t="g_treat"></legend><div class="fg" id="g3"></div></fieldset>
+        <div class="actions">
+          <button class="btn primary" id="calc" type="button" data-t="calc"></button>
+          <button class="btn ghost" id="reset" type="button" data-t="reset"></button>
+          <span class="msg" id="msg"></span>
+        </div>
+      </form>
+    </section>
+    <section class="card" id="res">
+      <h2 data-t="result"></h2>
+      <div class="placeholder" id="ph"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 16l4-5 4 3 6-8"/></svg><span data-t="placeholder"></span></div>
+      <div id="out" hidden>
+        <div class="stalebar" data-t="stale"></div>
+        <div class="resbody">
+          <div class="big"><span class="num" id="r5"></span><span id="badge" class="badge"></span></div>
+          <div class="sub5" data-t="r5lab"></div>
+          <div class="advice" id="advice"></div>
+          <table><thead><tr><th data-t="horizon"></th><th class="r" data-t="cif"></th></tr></thead><tbody id="tab"></tbody></table>
+          <svg class="plot" id="plot" viewBox="0 0 560 330" role="img" aria-label="Cumulative incidence curve"></svg>
+        </div>
+      </div>
+      <div class="notes" data-th="notes"></div>
+    </section>
+  </main>
+</div>
+
+<footer><img class="fl" src="logo.png" alt=""><span data-t="footer"></span></footer>
+
+<script src="model.js"></script>
+<script>
+"use strict";
+const YEAR_FIXED = 2023;   // the model includes year of diagnosis; predictions use the most recent year of the development data
+const SEER_DB = "Incidence – SEER Research Data, 17 Registries, Nov 2025 Sub (2000–2023)";
+const T = {
+  en: {
+    kicker: "Clinical research tool", home: "← Home",
+    title: "Breast-cancer death risk after breast-conserving surgery in women aged ≥70 years",
+    lead: "Estimate the cumulative incidence of breast-cancer death at 3, 5 and 10 years from routine clinical and pathological characteristics, using a competing-risk machine-learning model developed in the SEER database.",
+    dept: "Department of Breast Surgery", start: "Start prediction",
+    t1h: "Who it is for", t1p: "Women aged ≥70 years with T1–T2, N0–N1 or Nx invasive ductal carcinoma treated with breast-conserving surgery.",
+    t2h: "What you get", t2p: "The predicted cumulative incidence of breast-cancer death at 3, 5 and 10 years, a 10-year incidence curve and the model-based risk group (low or high).",
+    t3h: "How it was built", t3p: "CoxBoost-FG competing-risk model, with other-cause death as a competing event, developed in SEER 17 registries (diagnoses 2010–2023); 5-year C-index 0.772 in cross-validation.",
+    t4h: "Your privacy", t4p: "All calculations run in your browser. Nothing you enter is sent, saved or shared.",
+    ptitle: "Risk prediction", psub: "Complete every field, then click Calculate.",
+    inputs: "Patient and tumour characteristics", g_patient: "Patient", g_tumour: "Tumour", g_treat: "Treatment",
+    calc: "Calculate", reset: "Reset", select: "— Select —", missing: "Please complete the {n} highlighted field(s).", fix: "Please correct the highlighted field(s).",
+    result: "Predicted risk of breast-cancer death", placeholder: "Complete all fields on the left and click Calculate to see the prediction.",
+    stale: "The inputs have changed. Click Calculate to update the results.",
+    horizon: "Time since diagnosis", cif: "Cumulative incidence", y3: "3 years", y5: "5 years", y10: "10 years",
+    r5lab: "Predicted 5-year cumulative incidence of breast-cancer death", low: "Low risk", high: "High risk",
+    adv_hi_t: "Suggestion: radiotherapy is recommended",
+    adv_hi_b: "In the development study, patients in the high-risk group who received radiotherapy had a 5-year risk of breast-cancer death about 3.6 percentage points lower than those who refused it.",
+    adv_lo_t: "Note: the benefit of radiotherapy may be small; omitting radiotherapy can be discussed with your doctor",
+    adv_lo_b: "In the development study, the difference in the low-risk group was about 0.5 percentage points and was not statistically significant. Whether to omit radiotherapy also depends on the risk of local recurrence, hormone-receptor status and endocrine therapy, general health and personal preference.",
+    adv_note: "This suggestion is for reference only; treatment decisions should be made together with your doctor.",
+    xlab: "Months since diagnosis", ylab: "Cumulative incidence of breast-cancer death",
+    tauto: "Set from tumour size (T1 ≤20 mm, T2 21–50 mm)", nxnote: "Nx: no lymph nodes examined (set to 0)",
+    nodes0: "N0/N1 requires at least 1 node examined", warn: "Above the 99th percentile of the development cohort ({v}); prediction less reliable", range: "Allowed range {a}–{b}",
+    footer: "Xiangya Hospital of Central South University · This calculator is intended for research and education. It does not replace clinical judgement and should not be used on its own to guide treatment decisions for individual patients. The model has been validated internally only.",
+    notes: `<h3>Intended use and limitations</h3><ul>
+      <li>For research and education only; not intended to guide treatment decisions for individual patients.</li>
+      <li>Developed in women aged ≥70 years with T1–T2, N0–N1 or Nx invasive ductal carcinoma treated with breast-conserving surgery, diagnosed in 2010–2023, who received radiotherapy or documented refusal of it and survived at least 6 months. Do not use outside this population.</li>
+      <li>The model includes year of diagnosis; predictions are calculated for diagnosis in ${YEAR_FIXED}, the most recent year of the development data.</li>
+      <li>Internal validation only (5-fold cross-validation; 5-year competing-risk C-index 0.772); no external validation.</li>
+      <li>Other-cause death is treated as a competing event; the cumulative incidence is not the overall mortality.</li></ul>
+      <h3>Model</h3><ul><li>CoxBoost-FG (likelihood-based boosting of the Fine–Gray subdistribution hazard). The page contains only model coefficients and baseline cumulative hazards; no patient-level data.</li></ul>
+      <h3>Data source</h3><ul><li>Surveillance, Epidemiology, and End Results (SEER) Program, ${SEER_DB}.</li></ul>`
+  },
+  zh: {
+    kicker: "临床科研工具", home: "← 首页",
+    title: "70岁及以上保乳术后乳腺癌患者乳腺癌死亡风险计算器",
+    lead: "基于SEER数据库构建的竞争风险机器学习模型，根据常规临床病理特征估计患者3年、5年与10年的乳腺癌死亡累积发生率。",
+    dept: "乳腺外科", start: "开始预测",
+    t1h: "适用人群", t1p: "年龄≥70岁、接受保乳手术的T1–T2期、N0–N1或Nx浸润性导管癌女性。",
+    t2h: "预测结果", t2p: "3年、5年与10年乳腺癌死亡累积发生率，10年累积发生率曲线，以及模型判定的风险分组（低风险或高风险）。",
+    t3h: "模型构建", t3p: "CoxBoost-FG竞争风险模型（他因死亡为竞争事件），基于SEER 17个登记处数据（2010–2023年诊断）构建；交叉验证5年C指数0.772。",
+    t4h: "隐私保护", t4p: "全部计算在您的浏览器中完成，输入的信息不会被上传、保存或共享。",
+    ptitle: "风险预测", psub: "请填写全部项目，然后点击“计算”。",
+    inputs: "患者与肿瘤特征", g_patient: "患者", g_tumour: "肿瘤", g_treat: "治疗",
+    calc: "计算", reset: "重置", select: "— 请选择 —", missing: "请填写标红的 {n} 个项目。", fix: "请修正标红的项目。",
+    result: "预测的乳腺癌死亡风险", placeholder: "请在左侧填写全部项目并点击“计算”，此处将显示预测结果。",
+    stale: "输入已更改，请点击“计算”更新结果。",
+    horizon: "诊断后时间", cif: "累积发生率", y3: "3年", y5: "5年", y10: "10年",
+    r5lab: "预测的5年乳腺癌死亡累积发生率", low: "低风险", high: "高风险",
+    adv_hi_t: "建议：接受放疗",
+    adv_hi_b: "在建模研究中，高风险组接受放疗者的5年乳腺癌死亡风险比拒绝放疗者低约3.6个百分点。",
+    adv_lo_t: "提示：放疗获益可能较小，可与医生讨论是否省略放疗",
+    adv_lo_b: "在建模研究中，低风险组两者相差约0.5个百分点，差异无统计学意义。是否省略还需考虑局部复发风险、激素受体状态与内分泌治疗、身体状况和个人意愿。",
+    adv_note: "本建议仅供参考，治疗方案请与您的医生共同决定。",
+    xlab: "诊断后月数", ylab: "乳腺癌死亡累积发生率",
+    tauto: "由肿瘤大小自动确定（T1 ≤20 mm，T2 21–50 mm）", nxnote: "Nx：未行淋巴结检查（检出数设为0）",
+    nodes0: "N0/N1 需至少检出1枚淋巴结", warn: "超过建模队列的第99百分位数（{v}），预测可靠性较低", range: "允许范围 {a}–{b}",
+    footer: "中南大学湘雅医院 · 本计算器仅供科研与教学使用，不能替代临床判断，也不应单独用于指导个体患者的治疗决策。模型目前仅经过内部验证。",
+    notes: `<h3>用途与局限</h3><ul>
+      <li>仅供科研与教学使用，不用于指导个体患者的治疗决策。</li>
+      <li>建模人群为2010—2023年诊断、年龄≥70岁、接受保乳手术的T1–T2期、N0–N1或Nx浸润性导管癌女性，接受放疗或经记录拒绝放疗，且生存至少6个月。不适用于该人群以外的患者。</li>
+      <li>模型包含诊断年份变量；网页统一按建模数据中最近的年份（${YEAR_FIXED}年）计算。</li>
+      <li>模型仅经过内部验证（5折交叉验证；5年竞争风险C指数0.772），尚无外部验证。</li>
+      <li>他因死亡作为竞争事件处理；累积发生率不等于全因死亡率。</li></ul>
+      <h3>模型</h3><ul><li>CoxBoost-FG（对Fine–Gray亚分布风险的似然提升）。网页仅包含模型系数与基线累积风险，不含任何患者个体数据。</li></ul>
+      <h3>数据来源</h3><ul><li>Surveillance, Epidemiology, and End Results（SEER）Program，${SEER_DB}。</li></ul>`
+  }
+};
+const LV = {
+  age: { "70-74": ["70–74", "70–74"], "75-79": ["75–79", "75–79"], "80-84": ["80–84", "80–84"], "85-89": ["85–89", "85–89"], "90+": ["≥90", "≥90"] },
+  t_stage: { T1: ["T1", "T1"], T2: ["T2", "T2"] },
+  n_stage: { N0: ["N0", "N0"], N1: ["N1 (1–3 positive nodes)", "N1（1–3枚阳性）"], Nx: ["Nx (no nodes examined)", "Nx（未行淋巴结检查）"] },
+  grade: { I: ["I", "I级"], II: ["II", "II级"], III: ["III", "III级"] },
+  er_status: { Positive: ["Positive", "阳性"], Negative: ["Negative", "阴性"] },
+  pr_status: { Positive: ["Positive", "阳性"], Negative: ["Negative", "阴性"] },
+  her2_status: { Negative: ["Negative", "阴性"], Positive: ["Positive", "阳性"] },
+  laterality: { Left: ["Left", "左侧"], Right: ["Right", "右侧"] },
+  race: { White: ["White", "白人"], Black: ["Black", "黑人"], Other: ["Other", "其他"] },
+  marital_status: { Married: ["Married", "已婚"], Other: ["Other", "其他"] },
+  median_household_income: { "<55k": ["<$55,000", "<55,000美元"], "55-75k": ["$55,000–74,999", "55,000–74,999美元"], "75-100k": ["$75,000–99,999", "75,000–99,999美元"], ">=100k": ["≥$100,000", "≥100,000美元"] },
+  rural_urban: { "Metropolitan >=1 million": ["Metropolitan, ≥1 million", "都市区（人口≥100万）"], "Metropolitan <1 million": ["Metropolitan, <1 million", "都市区（人口<100万）"], Nonmetropolitan: ["Non-metropolitan", "非都市区"] },
+  chemotherapy: { No_Unknown: ["No or unknown", "否或不详"], Yes: ["Yes", "是"] }
+};
+const GROUP = { age: "g1", race: "g1", marital_status: "g1", median_household_income: "g1", rural_urban: "g1",
+  tumor_size: "g2", t_stage: "g2", n_stage: "g2", regional_nodes_examined: "g2", grade: "g2", laterality: "g2", er_status: "g2", pr_status: "g2", her2_status: "g2",
+  chemotherapy: "g3", time_from_diagnosis_to_treatment_days: "g3" };
+const ORDER = ["age", "race", "marital_status", "median_household_income", "rural_urban",
+  "tumor_size", "t_stage", "n_stage", "regional_nodes_examined", "grade", "laterality", "er_status", "pr_status", "her2_status",
+  "chemotherapy", "time_from_diagnosis_to_treatment_days"];                 // year of diagnosis is not asked (fixed at YEAR_FIXED)
+const NUMS = ["tumor_size", "regional_nodes_examined", "time_from_diagnosis_to_treatment_days"];
+const V = Object.fromEntries(MODEL.vars.map(v => [v.name, v]));
+let lang = "en";                                   // the page always opens in English
+let computed = false;
+
+// ---------------- model: identical to predict.CoxBoost(type = "CIF"), averaged over the five fold models ----------------
+function designRow(inp) {
+  const x = Object.fromEntries(MODEL.xnames.map(n => [n, 0]));
+  for (const v of MODEL.vars) {
+    if (v.type === "number") x[v.col] = Number(inp[v.name]);
+    else { const i = v.levels.indexOf(inp[v.name]); if (i < 0) throw new Error("unknown level " + v.name + "=" + inp[v.name]); if (v.cols[i]) x[v.cols[i]] = 1; }
+  }
+  return MODEL.xnames.map(n => x[n]);
+}
+function predictCIF(inp) {                          // CIF on the monthly grid 0..120; inp must contain every model variable
+  const x = designRow(inp), G = MODEL.grid_months.length, out = new Array(G).fill(0);
+  for (const f of MODEL.folds) {
+    let lp = 0;
+    for (let j = 0; j < x.length; j++) if (f.b[j] !== 0) lp += f.b[j] * (x[j] - f.mean[j]) / f.sd[j];
+    const r = Math.exp(lp);
+    for (let g = 0; g < G; g++) out[g] += (1 - Math.exp(-r * f.H0[g])) / MODEL.folds.length;
+  }
+  return out;
+}
+window.predictCIF = predictCIF;
+
+// ---------------- helpers ----------------
+const tr = k => T[lang][k];
+const L = () => (lang === "en" ? 0 : 1);
+const el = n => document.getElementById("i_" + n);
+const fmt = p => (100 * p).toFixed(2) + "%";
+function applyText() {
+  document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  document.title = lang === "zh" ? "乳腺癌死亡风险计算器" : "Breast-Cancer Death Risk Calculator";
+  document.querySelectorAll("[data-t]").forEach(e => e.textContent = tr(e.dataset.t));
+  document.querySelectorAll("[data-th]").forEach(e => e.innerHTML = tr(e.dataset.th));
+  document.getElementById("b-en").classList.toggle("on", lang === "en"); document.getElementById("b-zh").classList.toggle("on", lang === "zh");
+}
+
+// ---------------- form ----------------
+function build() {
+  const keep = document.getElementById("i_age") ? readRaw() : null;
+  for (const g of ["g1", "g2", "g3"]) document.getElementById(g).innerHTML = "";
+  for (const name of ORDER) {
+    const v = V[name], box = document.createElement("div");
+    const lab = document.createElement("label"); lab.htmlFor = "i_" + name; lab.textContent = v.label[L()]; box.appendChild(lab);
+    let e;
+    if (v.type === "number") { e = document.createElement("input"); e.type = "number"; e.min = v.min; e.max = v.max; e.step = 1; e.inputMode = "numeric"; }
+    else {
+      e = document.createElement("select");
+      const o0 = document.createElement("option"); o0.value = ""; o0.textContent = tr("select"); e.appendChild(o0);
+      for (const l of v.levels) { const o = document.createElement("option"); o.value = l; o.textContent = LV[name][l][L()]; e.appendChild(o); }
+    }
+    e.id = "i_" + name; e.name = name; box.appendChild(e);
+    const h = document.createElement("div"); h.className = "hint"; h.id = "h_" + name; box.appendChild(h);
+    document.getElementById(GROUP[name]).appendChild(box);
+    e.addEventListener("input", () => onEdit(name)); e.addEventListener("change", () => onEdit(name));
+  }
+  el("t_stage").disabled = true;
+  if (keep) writeRaw(keep);
+  rules(false);
+}
+function readRaw() { const o = {}; for (const n of ORDER) o[n] = el(n).value; return o; }
+function writeRaw(o) { for (const n of ORDER) if (o[n] !== undefined) el(n).value = o[n]; }
+function rules(showErrors) {             // consistency rules of the development data; returns list of problem fields
+  const bad = [];
+  for (const n of ORDER) { el(n).classList.remove("bad"); el(n).classList.toggle("empty", el(n).tagName === "SELECT" && el(n).value === ""); }
+  for (const n of NUMS) { const h = document.getElementById("h_" + n); h.className = "hint"; h.textContent = ""; }
+  const ts = el("tumor_size"), ns = el("n_stage"), ne = el("regional_nodes_examined");
+  const sz = Number(ts.value); el("t_stage").value = ts.value !== "" && Number.isFinite(sz) && sz >= 1 && sz <= 50 ? (sz <= 20 ? "T1" : "T2") : "";
+  el("t_stage").classList.toggle("empty", el("t_stage").value === "");
+  document.getElementById("h_t_stage").textContent = tr("tauto");
+  if (ns.value === "Nx") { ne.value = 0; ne.disabled = true; document.getElementById("h_n_stage").textContent = tr("nxnote"); }
+  else { ne.disabled = false; document.getElementById("h_n_stage").textContent = ""; }
+  for (const n of ORDER) {
+    if (n === "t_stage") continue;
+    const v = V[n], e = el(n);
+    if (e.value === "") { bad.push(n); continue; }
+    if (v.type === "number") {
+      const x = Number(e.value), h = document.getElementById("h_" + n);
+      if (!Number.isFinite(x) || x < v.min || x > v.max || Math.round(x) !== x) { bad.push(n); h.className = "hint warn"; h.textContent = tr("range").replace("{a}", v.min).replace("{b}", v.max); continue; }
+      if (v.warn_above !== undefined && v.warn_above !== null && x > v.warn_above) { h.className = "hint warn"; h.textContent = tr("warn").replace("{v}", v.warn_above); }
+    }
+  }
+  if (ns.value !== "" && ns.value !== "Nx" && ne.value !== "" && Number(ne.value) === 0) {
+    bad.push("regional_nodes_examined"); const h = document.getElementById("h_regional_nodes_examined"); h.className = "hint warn"; h.textContent = tr("nodes0"); }
+  if (showErrors) for (const n of bad) el(n).classList.add("bad");
+  return bad;
+}
+function onEdit(name) {
+  if (name === "regional_nodes_examined" && Number(el(name).value) > 0 && el("n_stage").value === "Nx") el("n_stage").value = "";
+  rules(false); el(name).classList.remove("bad");
+  if (computed) document.getElementById("res").classList.add("stale");
+  document.getElementById("msg").textContent = "";
+}
+function calculate() {
+  const bad = rules(true), msg = document.getElementById("msg");
+  if (bad.length) { const empty = bad.filter(n => el(n).value === "").length;
+    msg.textContent = empty ? tr("missing").replace("{n}", bad.length) : tr("fix"); el(bad[0]).focus(); return; }
+  msg.textContent = "";
+  const inp = {}; for (const n of ORDER) inp[n] = V[n].type === "number" ? Number(el(n).value) : el(n).value;
+  inp.year_of_diagnosis = YEAR_FIXED;
+  render(predictCIF(inp)); computed = true;
+  document.getElementById("res").classList.remove("stale");
+  document.getElementById("ph").hidden = true; document.getElementById("out").hidden = false;
+  if (window.innerWidth < 880) document.getElementById("res").scrollIntoView({ behavior: "smooth" });
+}
+function resetForm() {
+  for (const n of ORDER) el(n).value = ""; rules(false); computed = false; lastCIF = null;
+  document.getElementById("msg").textContent = ""; document.getElementById("res").classList.remove("stale");
+  document.getElementById("ph").hidden = false; document.getElementById("out").hidden = true;
+}
+
+// ---------------- output ----------------
+let lastCIF = null;
+function render(c) {
+  lastCIF = c;
+  const at = m => c[MODEL.grid_months.indexOf(m)], p5 = at(60), hi = p5 > MODEL.cut_5y;
+  document.getElementById("r5").textContent = fmt(p5);
+  const b = document.getElementById("badge"); b.textContent = tr(hi ? "high" : "low"); b.className = "badge " + (hi ? "high" : "low");
+  const icon = hi ? `<path d="M12 3l9 16H3z"/><path d="M12 10v4"/><circle cx="12" cy="17" r=".6"/>`
+                  : `<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r=".6"/>`;
+  const a = document.getElementById("advice"); a.className = "advice " + (hi ? "high" : "low");
+  a.innerHTML = `<svg viewBox="0 0 24 24">${icon}</svg><div><div class="at">${tr(hi ? "adv_hi_t" : "adv_lo_t")}</div><div class="ab">${tr(hi ? "adv_hi_b" : "adv_lo_b")}</div></div><div class="an">${tr("adv_note")}</div>`;
+  document.getElementById("tab").innerHTML = [[36, "y3"], [60, "y5"], [120, "y10"]].map(([m, k]) => `<tr><td>${tr(k)}</td><td class="r">${fmt(at(m))}</td></tr>`).join("");
+  plot(c);
+}
+function niceMax(v) { const s = [0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1]; return s.find(x => x >= v * 1.12) || 1; }
+function plot(c) {
+  const W = 560, H = 330, Lm = 62, R = 16, Tp = 14, B = 46, ymax = niceMax(c[c.length - 1]);
+  const X = m => Lm + (W - Lm - R) * m / 120, Y = p => Tp + (H - Tp - B) * (1 - p / ymax);
+  const step = ymax <= 0.02 ? 0.005 : ymax <= 0.05 ? 0.01 : ymax <= 0.1 ? 0.02 : ymax <= 0.2 ? 0.05 : 0.1;
+  let s = `<g class="axis">`;
+  for (let p = 0; p <= ymax + 1e-9; p += step) s += `<line x1="${Lm}" x2="${W - R}" y1="${Y(p)}" y2="${Y(p)}" stroke-dasharray="2 3"/><text x="${Lm - 6}" y="${Y(p) + 4}" text-anchor="end">${(100 * p).toFixed(step < 0.01 ? 1 : 0)}%</text>`;
+  for (let m = 0; m <= 120; m += 12) s += `<line x1="${X(m)}" x2="${X(m)}" y1="${H - B}" y2="${H - B + 5}"/><text x="${X(m)}" y="${H - B + 18}" text-anchor="middle">${m}</text>`;
+  s += `<path d="M${Lm},${Tp}V${H - B}H${W - R}" fill="none"/><text x="${(Lm + W - R) / 2}" y="${H - 8}" text-anchor="middle">${tr("xlab")}</text>`;
+  s += `<text transform="translate(14,${(Tp + H - B) / 2}) rotate(-90)" text-anchor="middle">${tr("ylab")}</text></g>`;
+  let d = `M${X(0)},${Y(c[0])}`; for (let g = 1; g < c.length; g++) d += `H${X(g)}V${Y(c[g])}`;
+  s += `<path d="${d}" fill="none" stroke="var(--curve)" stroke-width="2.4"/>`;
+  for (const m of [36, 60, 120]) { const p = c[m]; s += `<circle cx="${X(m)}" cy="${Y(p)}" r="4" fill="var(--curve)"/><text x="${X(m) - 4}" y="${Y(p) - 9}" text-anchor="${m === 120 ? "end" : "middle"}" font-size="12" font-weight="700" fill="var(--ink)">${(100 * p).toFixed(2)}%</text>`; }
+  document.getElementById("plot").innerHTML = s;
+}
+
+// ---------------- views (welcome / prediction) and language ----------------
+function show() {
+  const p = location.hash === "#predict";
+  document.getElementById("view-home").hidden = p; document.getElementById("view-predict").hidden = !p;
+  document.getElementById("homelink").hidden = !p; window.scrollTo(0, 0);
+}
+function setLang(l) { lang = l; applyText(); build(); if (lastCIF) render(lastCIF); }
+document.getElementById("start").onclick = () => { location.hash = "#predict"; };
+document.getElementById("homelink").onclick = () => { location.hash = ""; };
+document.getElementById("calc").onclick = calculate;
+document.getElementById("reset").onclick = resetForm;
+document.getElementById("b-en").onclick = () => setLang("en");
+document.getElementById("b-zh").onclick = () => setLang("zh");
+window.addEventListener("hashchange", show);
+applyText(); build(); show();
+</script>
+</body>
+</html>
