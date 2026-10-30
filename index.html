@@ -187,7 +187,7 @@
 <script src="model.js"></script>
 <script>
 "use strict";
-const YEAR_FIXED = 2023;   // the model includes year of diagnosis; predictions use the most recent year of the development data
+const YEAR_FIXED = 2017;   // the model includes year of diagnosis; predictions use the mean year of diagnosis of the development cohort (2017.2), so that the predicted risk is on the same scale as the 2.00% cut-point (median predicted risk 2.00%; risk-group agreement with the paper 93.7%)
 const SEER_DB = "Incidence – SEER Research Data, 17 Registries, Nov 2025 Sub (2000–2023)";
 const T = {
   en: {
@@ -218,7 +218,7 @@ const T = {
     notes: `<h3>Intended use and limitations</h3><ul>
       <li>For research and education only; intended to support discussion between doctors and patients about whether to receive radiotherapy, not to replace clinical judgment.</li>
       <li>Developed in women aged ≥70 years with T1–T2, N0–N1 or Nx invasive ductal carcinoma treated with breast-conserving surgery, diagnosed in 2010–2023, who received radiotherapy or documented refusal of it and survived at least 6 months. Do not use outside this population.</li>
-      <li>The model includes year of diagnosis; predictions are calculated for diagnosis in ${YEAR_FIXED}, the most recent year of the development data.</li>
+      <li>The model includes year of diagnosis; predictions are calculated for diagnosis in ${YEAR_FIXED}, the mean year of diagnosis in the development cohort (2010–2023), so that the predicted risk is on the same scale as the risk groups in the study. Patients diagnosed in recent years may have a slightly lower risk.</li>
       <li>Internal validation only (5-fold cross-validation; 5-year competing-risk C-index 0.772); no external validation.</li>
       <li>Other-cause death is treated as a competing event; the cumulative incidence is not the overall mortality.</li></ul>
       <h3>Model</h3><ul><li>CoxBoost-FG (likelihood-based boosting of the Fine–Gray subdistribution hazard). The page contains only model coefficients and baseline cumulative hazards; no patient-level data.</li></ul>
@@ -252,7 +252,7 @@ const T = {
     notes: `<h3>用途与局限</h3><ul>
       <li>仅供科研与教学使用；用于辅助医生与患者讨论是否接受放疗，不能替代临床判断。</li>
       <li>建模人群为2010—2023年诊断、年龄≥70岁、接受保乳手术的T1–T2期、N0–N1或Nx浸润性导管癌女性，接受放疗或经记录拒绝放疗，且生存至少6个月。不适用于该人群以外的患者。</li>
-      <li>模型包含诊断年份变量；网页统一按建模数据中最近的年份（${YEAR_FIXED}年）计算。</li>
+      <li>模型包含诊断年份变量；网页按2010—2023年建模队列的平均诊断年份（${YEAR_FIXED}年）计算，使风险数值与研究中的风险分层处于同一尺度；近年诊断患者的实际风险可能略低。</li>
       <li>模型仅经过内部验证（5折交叉验证；5年竞争风险C指数0.772），尚无外部验证。</li>
       <li>他因死亡作为竞争事件处理；累积发生率不等于全因死亡率。</li></ul>
       <h3>模型</h3><ul><li>CoxBoost-FG（对Fine–Gray亚分布风险的似然提升）。网页仅包含模型系数与基线累积风险，不含任何患者个体数据。</li></ul>
